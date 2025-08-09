@@ -1,14 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Chain Reaction</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chain Reaction — Neon</title>
+<style>
+:root{
+  --text:#eaf2ff; --muted:#9fb3c8;
+  --gap:10px; --cell-size:min(8.8vmin,56px); --radius:16px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; color:var(--text);
+  font:500 16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji";
+  background: radial-gradient(1200px 800px at 10% 10%, #061126 0%, #070c18 40%, #050811 68%, #03060d 100%);
+}
+
+/* Topbar */
+.topbar{
+  position:sticky; top:0; z-index:10;
+  display:flex; gap:12px; align-items:center; justify-content:space-between;
+  padding:12px clamp(12px, 3vw, 24px);
+  background:rgba(5,8,17,.65);
+  border-bottom:1px solid #ffffff16;
+  backdrop-filter: blur(10px);
+}
+.brand{font-weight:800; letter-spacing:.3px}
+.controls{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px}
+label{display:flex; align-items:center; gap:6px; color:var(--muted); font-size:14px}
+select,.btn{
+  background:#121a2f; color:var(--text);
+  border:1px solid #ffffff26; border-radius:12px; padding:8px 10px; cursor:pointer
+}
+.btn:hover{background:#1b2748}
+
+/* Color panel */
+.colors{
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
+  padding:10px 12px; margin:10px auto 0;
+  border:1px solid #ffffff16; border-radius:14px;
+  background:rgba(10,14,28,.6); backdrop-filter: blur(8px);
+}
+.colors .row{display:flex; align-items:center; gap:10px}
+.swatch{
+  display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:10px;
+  background:#0e1630; border:1px solid #ffffff14;
+}
+.swatch .dot{width:16px; height:16px; border-radius:999px; box-shadow:0 0 10px currentColor}
+.swatch label{color:#cfe0ff; font-size:13px}
+input[type="color"]{
+  appearance:none; -webkit-appearance:none; width:36px; height:28px; border:none; background:transparent; cursor:pointer;
+}
+input[type="color"]::-webkit-color-swatch-wrapper{padding:0}
+input[type="color"]::-webkit-color-swatch{border:none; border-radius:8px}
+
+/* Wrap */
+.wrap{max-width:1100px; margin:0 auto; padding:16px clamp(12px, 3vw, 24px)}
+.status{display:flex; align-items:center; gap:12px; margin:8px 0 16px}
+.badge{min-width:14px; min-height:14px; border-radius:999px; border:2px solid #ffffff66; box-shadow:0 0 0 3px #ffffff22 inset}
+.status-text{color:#cfe0ff; font-size:15px}
+
+/* Board with neon haze */
+.board{
+  position:relative;
+  display:grid; gap:var(--gap); justify-content:center;
+  padding:calc(var(--gap) + 4px);
+  border-radius:20px;
+  border:1px solid #ffffff18;
+  background:
+    radial-gradient(600px 400px at 20% 0%, #1a2a55 0%, #111d3b 35%, #0b132a 60%, #090f22 100%),
+    linear-gradient(180deg,#0a1227,#0a0f1f);
+  box-shadow:
+    0 0 0 1px #7aa7ff0e inset,
+    0 0 30px #1a2a5522 inset,
+    0 30px 80px #0009;
+  overflow:hidden;
+}
+.board::after{
+  content:""; position:absolute; inset:0;
+  background:
+    radial-gradient(500px 300px at var(--x,10%) var(--y,10%), #3b82f620 0%, transparent 60%),
+    radial-gradient(400px 260px at calc(100% - var(--x,10%)) calc(100% - var(--y,10%)), #22d3ee18 0%, transparent 65%);
+  mix-blend-mode:screen; animation: drift 10s linear infinite; pointer-events:none;
+}
+@keyframes drift{ 0%{--x:12%;--y:18%} 50%{--x:78%;--y:72%} 100%{--x:12%;--y:18%} }
+
+/* Cells */
+.cell{
+  width:var(--cell-size); height:var(--cell-size);
+  border-radius:14px; position:relative; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(180deg,#0c142a,#0a1020);
+  border:1px solid #5a6b8b10;
+  box-shadow:0 1px 0 #ffffff08 inset, 0 -1px 0 #000000aa inset, 0 6px 18px #0008;
+  cursor:pointer; transition:transform .06s ease, box-shadow .2s ease, outline-color .2s ease;
+  outline:2px solid #ffffff14;
+}
+.cell:active{transform:scale(.985)}
+.cell.owned{
+  box-shadow:
+    0 0 0 1px #ffffff12 inset,
+    0 0 18px var(--neon, #00f) inset,
+    0 0 22px var(--neon, #00f),
+    0 12px 26px #000a;
+  outline:2px solid color-mix(in srgb, var(--neon, #00f) 50%, transparent);
+}
+
+/* Orbs */
+.orb{width:62%; height:62%; border-radius:999px; position:relative; display:grid; place-items:center;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)); transition: transform .15s ease;}
+.orb::after{content:""; width:36%; height:36%; background:#fff9; border-radius:999px; position:absolute; top:18%; left:18%; filter:blur(1px)}
+.orb.count2{width:80%; height:80%; display:flex; gap:12%}
+.orb.count2>i,.orb.count3>i{display:block; width:42%; height:42%; background:#fff3; border-radius:999px}
+.orb.count3{width:92%; height:92%; display:flex; gap:6%; align-items:center; justify-content:center}
+.orb.count3>i{width:32%; height:32%}
+
+/* Bomb */
+.bomb{
+  position:absolute; inset:auto auto 6% 6%;
+  width:26%; aspect-ratio:1/1; display:block;
+  filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 12px currentColor);
+  animation: bombPulse 1s ease-in-out infinite; opacity:.95;
+}
+@keyframes bombPulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+
+/* Footer */
+.footer{color:var(--muted); margin:16px 0 4px; font-size:13px}
+
+@media (max-width:520px){
+  :root{ --gap:8px; --cell-size:min(12vmin,52px); }
+  .controls{gap:6px 8px}
+  select,.btn{padding:8px}
+  .colors{gap:8px}
+}
+</style>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">Chain Reaction</div>
+    <div class="brand">Chain Reaction — Neon</div>
     <div class="controls">
       <label>Players:
         <select id="playersSelect" aria-label="Number of players">
@@ -35,13 +166,284 @@
       <div id="statusText" class="status-text">Tap a cell to play.</div>
     </div>
 
-    <div id="board" class="board" role="grid" aria-label="Chain Reaction Board"></div>
+    <!-- Player color controls -->
+    <div id="colorPanel" class="colors">
+      <div class="row">
+        <strong style="font-size:14px;color:#d9e6ff">Player Colors</strong>
+        <button id="resetColorsBtn" class="btn" style="margin-left:8px">Reset</button>
+      </div>
+      <div id="swatches" class="row"></div>
+    </div>
+
+    <div id="board" class="board" role="grid" aria-label="Board"></div>
 
     <footer class="footer">
-      <div>Rules: Add orbs to claim cells. When a cell hits its limit, it explodes to neighbors, chaining reactions. Last player with orbs on the board wins.</div>
+      <div>Tip: A <b>bomb</b> appears when a cell is one step from exploding (capacity − 1). Corners explode at 2, edges at 3, center at 4.</div>
     </footer>
   </main>
 
-  <script src="script.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const el = (tag, cls, attrs={}) => { const n=document.createElement(tag); if(cls) n.className=cls; for(const[k,v] of Object.entries(attrs)) n.setAttribute(k,v); return n; };
+
+  /* Default palette */
+  const DEFAULTS = ["#ff2d55","#2ea8ff","#2ed573","#ffb020","#b57aff","#ffd54a","#6cb2ff","#ff6b81"];
+  let COLORS = [...DEFAULTS];
+
+  /* State */
+  let rows=6, cols=9, players=2, current=0, board=[], playing=true;
+  let moveHistory=[], turnCommitted=false, eliminated=new Set(), firstMoveDone=new Array(8).fill(false);
+
+  /* DOM */
+  const boardEl=$("#board"), statusText=$("#statusText"), turnBadge=$("#turnBadge"),
+        playersSelect=$("#playersSelect"), gridSelect=$("#gridSelect"),
+        newGameBtn=$("#newGameBtn"), undoBtn=$("#undoBtn"),
+        swatchesEl=$("#swatches"), resetBtn=$("#resetColorsBtn");
+
+  /* Storage */
+  const KEY = "cr_neon_colors";
+  function loadColors(){
+    try{
+      const saved = JSON.parse(localStorage.getItem(KEY));
+      if(Array.isArray(saved) && saved.length===8){
+        COLORS = saved;
+      }
+    }catch{}
+  }
+  function saveColors(){
+    try{ localStorage.setItem(KEY, JSON.stringify(COLORS)); }catch{}
+  }
+
+  /* Init */
+  function init(){
+    loadColors();
+    playersSelect.value=String(players);
+    gridSelect.value="9x6";
+    setupColorPanel();
+    setupBoard(cols,rows);
+    bindUI();
+    updateStatus();
+  }
+
+  function bindUI(){
+    newGameBtn.addEventListener("click", () => {
+      const [c,r]=gridSelect.value.split("x").map(n=>parseInt(n,10));
+      cols=c; rows=r; players=parseInt(playersSelect.value,10);
+      setupColorPanel(); // refresh pickers for new player count
+      resetGame();
+    });
+    undoBtn.addEventListener("click", undo);
+    playersSelect.addEventListener("change", e => {
+      players=parseInt(e.target.value,10);
+      setupColorPanel();
+      resetGame(false);
+    });
+    gridSelect.addEventListener("change", e => {
+      const [c,r]=e.target.value.split("x").map(n=>parseInt(n,10));
+      cols=c; rows=r; resetGame(false);
+    });
+    resetBtn.addEventListener("click", () => {
+      COLORS=[...DEFAULTS]; saveColors();
+      setupColorPanel(); renderBoard(); updateStatus("Colors reset.");
+    });
+  }
+
+  /* Color UI */
+  function setupColorPanel(){
+    swatchesEl.innerHTML="";
+    for(let i=0;i<players;i++){
+      const wrap = el("div","swatch");
+      const dot = el("span","dot");
+      dot.style.color = COLORS[i];
+
+      const label = el("label",""); label.textContent = `P${i+1}`;
+      const input = el("input","",{type:"color", value: COLORS[i]});
+      input.addEventListener("input", (e)=>{
+        COLORS[i] = e.target.value;
+        dot.style.color = COLORS[i];
+        saveColors();
+        renderBoard();
+        updateStatus(); // update turn badge color if needed
+      });
+      wrap.appendChild(dot); wrap.appendChild(label); wrap.appendChild(input);
+      swatchesEl.appendChild(wrap);
+    }
+  }
+
+  /* Board */
+  function resetGame(rebuild=true){
+    current=0; playing=true; moveHistory=[]; firstMoveDone=new Array(8).fill(false); eliminated.clear();
+    if(rebuild) setupBoard(cols,rows); else setupBoard(cols,rows,false);
+    updateStatus("New game ready. Player 1 starts.");
+  }
+  function setupBoard(c,r,rebuildDOM=true){
+    board=Array.from({length:r},()=>Array.from({length:c},()=>({owner:-1,count:0})));
+    if(rebuildDOM){
+      boardEl.innerHTML="";
+      boardEl.style.gridTemplateColumns=`repeat(${c}, var(--cell-size))`;
+      boardEl.style.gridTemplateRows=`repeat(${r}, var(--cell-size))`;
+      for(let y=0;y<r;y++){
+        for(let x=0;x<c;x++){
+          const cell=el("button","cell",{"data-x":x,"data-y":y,"role":"gridcell"});
+          cell.addEventListener("click",()=>handleMove(x,y));
+          boardEl.appendChild(cell);
+        }
+      }
+    } else {
+      Array.from(boardEl.children).forEach(cell=>{ cell.classList.remove("owned"); cell.style.removeProperty("--neon"); cell.innerHTML=""; });
+    }
+  }
+
+  /* Rules helpers */
+  function capacity(x,y){
+    const onTop=y===0,onBottom=y===rows-1,onLeft=x===0,onRight=x===cols-1;
+    const edges=[onTop,onBottom,onLeft,onRight].filter(Boolean).length;
+    return edges===2?2:edges===1?3:4;
+  }
+  function neighbors(x,y){
+    const n=[]; if(x>0)n.push([x-1,y]); if(x<cols-1)n.push([x+1,y]); if(y>0)n.push([x,y-1]); if(y<rows-1)n.push([x,y+1]); return n;
+  }
+  function deepCopyBoard(b){ return b.map(row=>row.map(c=>({owner:c.owner,count:c.count}))); }
+
+  /* Undo */
+  function saveSnapshot(){ moveHistory.push({board:deepCopyBoard(board), current, playing, eliminated:new Set(Array.from(eliminated)), firstDone:[...firstMoveDone]});
+    if(moveHistory.length>30) moveHistory.shift(); }
+  function undo(){
+    if(!moveHistory.length) return;
+    const s=moveHistory.pop(); board=deepCopyBoard(s.board); current=s.current; playing=s.playing; eliminated=new Set(Array.from(s.eliminated)); firstMoveDone=[...s.firstDone];
+    renderBoard(); updateStatus("Undid last move.");
+  }
+
+  /* Moves */
+  function handleMove(x,y){
+    if(!playing) return;
+    const cell=board[y][x];
+    if(cell.owner!==-1 && cell.owner!==current){ pulseStatus("Play on empty or your own cells.",true); return; }
+    if(!turnCommitted){ saveSnapshot(); turnCommitted=true; }
+    cell.owner=current; cell.count+=1; animatePlace(x,y);
+    resolveReactions().then(()=>{
+      if(!firstMoveDone[current]) firstMoveDone[current]=true;
+      checkEliminations();
+      const alive=alivePlayers();
+      if(alive.length===1){ playing=false; updateStatus(`Player ${alive[0]+1} wins! 🏆`); turnCommitted=false; return; }
+      nextPlayer(); turnCommitted=false; updateStatus();
+    });
+  }
+
+  function alivePlayers(){
+    const counts=new Array(players).fill(0);
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){ const c=board[y][x]; if(c.owner!==-1) counts[c.owner]+=c.count; }
+    const alive=[]; for(let p=0;p<players;p++){ if(!firstMoveDone[p] || counts[p]>0) alive.push(p); } return alive;
+  }
+  function checkEliminations(){
+    const counts=new Array(players).fill(0);
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){ const c=board[y][x]; if(c.owner!==-1) counts[c.owner]+=c.count; }
+    for(let p=0;p<players;p++){ if(firstMoveDone[p] && counts[p]===0) eliminated.add(p); }
+  }
+  function nextPlayer(){ for(let i=1;i<=players;i++){ const cand=(current+i)%players; if(!eliminated.has(cand)){ current=cand; break; } } }
+
+  /* Reactions */
+  async function resolveReactions(){
+    const q=[];
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++) if(board[y][x].count>=capacity(x,y)) q.push([x,y]);
+    if(!q.length){ renderCellGroup(); return; }
+    const sleep=ms=>new Promise(res=>setTimeout(res,ms));
+    while(q.length){
+      const wave=[...new Set(q.map(([x,y])=>`${x},${y}`))].map(s=>s.split(",").map(n=>parseInt(n,10)));
+      q.length=0;
+      const toAdd=[];
+      for(const [x,y] of wave){
+        const cap=capacity(x,y), cell=board[y][x];
+        if(cell.count<cap) continue;
+        cell.count-=cap; if(cell.count===0) cell.owner=-1; animateBlast(x,y);
+        for(const [nx,ny] of neighbors(x,y)){ const ncell=board[ny][nx]; ncell.owner=current; ncell.count+=1; toAdd.push([nx,ny]); }
+      }
+      renderCellGroup();
+      for(const [nx,ny] of toAdd) if(board[ny][nx].count>=capacity(nx,ny)) q.push([nx,ny]);
+      await sleep(170);
+    }
+  }
+
+  /* Rendering */
+  function renderBoard(){ for(let y=0;y<rows;y++) for(let x=0;x<cols;x++) renderCell(x,y); }
+  function renderCellGroup(){
+    const cells=boardEl.children; let idx=0;
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){ const cellEl=cells[idx++]; drawCellContent(cellEl,x,y); }
+  }
+  function renderCell(x,y){ const idx=y*cols+x; const cellEl=boardEl.children[idx]; drawCellContent(cellEl,x,y); }
+
+  function bombSVG(color){
+    const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+    svg.setAttribute("viewBox","0 0 64 64"); svg.classList.add("bomb");
+    svg.style.color = color;
+    const g = document.createElementNS(svg.namespaceURI,"g");
+    const body = document.createElementNS(svg.namespaceURI,"circle");
+    body.setAttribute("cx","34"); body.setAttribute("cy","38"); body.setAttribute("r","18");
+    body.setAttribute("fill","currentColor");
+    const neck = document.createElementNS(svg.namespaceURI,"rect");
+    neck.setAttribute("x","25"); neck.setAttribute("y","16"); neck.setAttribute("width","18"); neck.setAttribute("height","8");
+    neck.setAttribute("rx","3"); neck.setAttribute("fill","currentColor");
+    const fuse = document.createElementNS(svg.namespaceURI,"path");
+    fuse.setAttribute("d","M44 18 C54 8, 62 16, 56 22");
+    fuse.setAttribute("stroke","currentColor"); fuse.setAttribute("stroke-width","4"); fuse.setAttribute("fill","none"); fuse.setAttribute("stroke-linecap","round");
+    const spark = document.createElementNS(svg.namespaceURI,"circle");
+    spark.setAttribute("cx","56"); spark.setAttribute("cy","22"); spark.setAttribute("r","4");
+    spark.setAttribute("fill","currentColor"); spark.style.filter="blur(0.5px)";
+    g.appendChild(body); g.appendChild(neck); g.appendChild(fuse); g.appendChild(spark);
+    svg.appendChild(g); return svg;
+  }
+
+  function drawCellContent(cellEl,x,y){
+    const data=board[y][x];
+    cellEl.innerHTML="";
+    const owner = data.owner;
+    const neon = owner!==-1 ? COLORS[owner % COLORS.length] : null;
+    if(neon){ cellEl.classList.add("owned"); cellEl.style.setProperty("--neon", neon); }
+    else { cellEl.classList.remove("owned"); cellEl.style.removeProperty("--neon"); }
+
+    if(data.count===0){ cellEl.style.boxShadow="0 6px 18px #0008"; return; }
+
+    const color = COLORS[owner % COLORS.length];
+
+    if(data.count===1){
+      const o=el("div","orb"); o.style.background=color; cellEl.appendChild(o);
+    } else if(data.count===2){
+      const w=el("div","orb count2"); w.style.background=color+"00"; w.appendChild(el("i")); w.appendChild(el("i")); cellEl.appendChild(w);
+    } else {
+      const w=el("div","orb count3"); w.style.background=color+"00"; w.appendChild(el("i")); w.appendChild(el("i")); w.appendChild(el("i")); cellEl.appendChild(w);
+    }
+
+    const cap = capacity(x,y);
+    if (data.count === cap - 1){
+      cellEl.appendChild(bombSVG(color));
+    }
+  }
+
+  /* Animations */
+  function animatePlace(x,y){
+    renderCell(x,y); const idx=y*cols+x; const cellEl=boardEl.children[idx];
+    const orb=cellEl.querySelector(".orb,.orb.count2,.orb.count3"); if(!orb) return;
+    orb.style.transform="scale(0.82)"; requestAnimationFrame(()=>{ orb.style.transition="transform .15s ease"; orb.style.transform="scale(1)"; setTimeout(()=> orb.style.transition="",160); });
+  }
+  function animateBlast(x,y){
+    const idx=y*cols+x; const cellEl=boardEl.children[idx];
+    cellEl.animate([{transform:"scale(1)"},{transform:"scale(0.93)"},{transform:"scale(1)"}],{duration:170,easing:"ease-out"});
+  }
+
+  function updateStatus(extra){
+    const color=COLORS[current%COLORS.length]; turnBadge.style.background=color;
+    const alive=alivePlayers().map(p=>p+1).join(", ");
+    statusText.textContent = extra || `Player ${current+1}'s turn • Alive: [${alive}]`;
+  }
+  function pulseStatus(msg,warn=false){
+    statusText.textContent=msg;
+    statusText.animate([{opacity:.6},{opacity:1}],{duration:260,easing:"ease-out"});
+    if(warn){ statusText.style.color="#ffb3b3"; setTimeout(()=> statusText.style.color="#cfe0ff",500); }
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
+</script>
 </body>
 </html>
