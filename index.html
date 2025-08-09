@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chain Reaction</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Chain Reaction</div>
+    <div class="controls">
+      <label>Players:
+        <select id="playersSelect" aria-label="Number of players">
+          <option>2</option><option>3</option><option>4</option>
+          <option>5</option><option>6</option><option>7</option><option>8</option>
+        </select>
+      </label>
+      <label>Grid:
+        <select id="gridSelect" aria-label="Grid size">
+          <option value="9x6">9×6</option>
+          <option value="10x8">10×8</option>
+          <option value="12x8">12×8</option>
+          <option value="15x10">15×10</option>
+        </select>
+      </label>
+      <button id="newGameBtn" class="btn">New Game</button>
+      <button id="undoBtn" class="btn" title="Undo last full move">Undo</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="status">
+      <div id="turnBadge" class="badge"></div>
+      <div id="statusText" class="status-text">Tap a cell to play.</div>
+    </div>
+
+    <div id="board" class="board" role="grid" aria-label="Chain Reaction Board"></div>
+
+    <footer class="footer">
+      <div>Rules: Add orbs to claim cells. When a cell hits its limit, it explodes to neighbors, chaining reactions. Last player with orbs on the board wins.</div>
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
