@@ -1,28 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Chain Reaction Multiplayer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="style.css">
-<script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chain Reaction - 2 Player Neon</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-<div id="gameWrapper">
-  <h1>Chain Reaction - 2 Player</h1>
-  <div id="statusBar">
-    <span id="statusText"></span>
-    <span id="turnBadge"></span>
+  <div id="gameContainer">
+    <h1>Chain Reaction Neon</h1>
+    <div id="statusBar">
+      <span id="turnBadge"></span>
+      <span id="statusText">Loading...</span>
+    </div>
+    <div id="controls">
+      <button id="newGameBtn">New Game</button>
+      <button id="undoBtn">Undo</button>
+    </div>
+    <div id="board" role="grid"></div>
   </div>
-  <div id="board"></div>
 
-  <div id="controls">
-    <button id="newGameBtn">New Game</button>
-  </div>
-</div>
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
 
-<script type="module" src="game.js"></script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCqmSa4u0Pmv2ubhVrATy_0_oaKfHYd1DM",
+      authDomain: "chain-reaction-nikhil.firebaseapp.com",
+      projectId: "chain-reaction-nikhil",
+      storageBucket: "chain-reaction-nikhil.appspot.com",
+      messagingSenderId: "962407013979",
+      appId: "1:962407013979:web:61aa487b08c4be9434697e",
+      measurementId: "G-JBNJGW0K74",
+      databaseURL: "https://chain-reaction-nikhil-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    window.db = getDatabase(app);
+  </script>
+
+  <script src="game.js"></script>
 </body>
 </html>
