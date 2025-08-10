@@ -1,95 +1,90 @@
-:root {
-  --cell-size: 60px;
-  --glow-color: #fff;
+:root{
+  --cell: 62px;
+  --gap: 6px;
+  --glow: #ff4757; /* set by JS each turn */
 }
 
-body {
-  background: #000;
-  color: #cfe0ff;
-  font-family: Arial, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:#000; color:#eaf2ff;
+  font:500 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  display:grid; place-items:start center;
 }
 
-#gameContainer {
-  text-align: center;
+h1{ margin:18px 0 6px; color:#47f2ff; text-shadow:0 0 18px #17cfe8 }
+.wrap{ width:min(1000px, 96vw); padding:8px 10px 28px }
+
+.toolbar{ display:flex; gap:10px; align-items:center; margin:8px 0 10px }
+label{ color:#a9bfd6; display:flex; gap:6px; align-items:center }
+select,.btn{ background:#101318; color:#eaf2ff; border:1px solid #ffffff24; border-radius:10px; padding:8px 10px; cursor:pointer }
+.btn:hover{ background:#161b24 }
+
+.status{ display:flex; gap:10px; align-items:center; margin:8px 0 14px }
+.badge{ width:18px; height:18px; border-radius:999px; box-shadow:0 0 12px var(--glow) }
+
+.board{
+  display:grid; grid-template-columns:repeat(9, var(--cell)); grid-auto-rows:var(--cell);
+  gap:var(--gap); padding:var(--gap); border-radius:18px;
+  background:#0b0b0b; border:1px solid #ffffff18;
+  box-shadow: 0 0 22px var(--glow);
+  animation: boardPulse 1.6s ease-in-out infinite;
+}
+@keyframes boardPulse{
+  0%,100%{ box-shadow:0 0 16px var(--glow) }
+  50%{ box-shadow:0 0 34px var(--glow) }
 }
 
-#statusBar {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 10px;
+.cell{
+  position:relative; width:var(--cell); height:var(--cell); border-radius:14px;
+  background:#151515; border:2px solid #ffffff22;
+  display:grid; place-items:center; cursor:pointer;
+  transition:border-color .25s ease, box-shadow .25s ease;
+}
+.cell.owned{ border-color:#ffffff44 }
+.cell.pulse{ box-shadow:0 0 10px var(--glow) inset; animation: cellPulse 1.2s ease-in-out infinite }
+@keyframes cellPulse{
+  0%,100%{ box-shadow:0 0 8px var(--glow) inset }
+  50%{ box-shadow:0 0 18px var(--glow) inset }
 }
 
-#statusText {
-  font-size: 1.2em;
-  margin-right: 10px;
-}
+/* Orbs */
+.orb{ width:68%; height:68%; border-radius:999px; position:relative; filter:drop-shadow(0 3px 8px #000a) }
+.orb::after{ content:""; position:absolute; inset:0; border-radius:999px; box-shadow:0 0 16px currentColor }
+.orb.one{ background:currentColor }
 
-#turnBadge {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+/* 2 atoms: Venn overlap */
+.pair{ width:100%; height:100%; position:relative }
+.pair i{
+  position:absolute; top:50%; transform:translate(-50%,-50%);
+  width:46%; height:46%; border-radius:999px; background:currentColor; filter:blur(.2px);
 }
+.pair i.a{ left:42% }   /* slight overlap */
+.pair i.b{ left:58% }
 
-#board {
-  display: grid;
-  gap: 4px;
-  justify-content: center;
-  margin-bottom: 10px;
+/* 3+ atoms -> SVG bomb with fuse + spark */
+.bombsvg {
+  position: absolute;
+  inset: 9% 9% 9% 9%;      /* ~82% of cell */
+  filter: drop-shadow(0 0 14px currentColor);
 }
-
-.cell {
-  width: var(--cell-size);
-  height: var(--cell-size);
-  background: #111;
-  border: 2px solid rgba(255,255,255,0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+.bombsvg .body      { fill: currentColor; }
+.bombsvg .neck      { fill: currentColor; }
+.bombsvg .fuse      { stroke: #c9a777; stroke-width: 3.4; stroke-linecap: round; fill: none; }
+.bombsvg .fuseShadow{ stroke: #7a5d36; stroke-width: 5; opacity:.35; }
+.bombsvg .sparkBase { fill: #ffd54a; }       /* warm core */
+.bombsvg .sparkTint { fill: currentColor; }  /* tinted tips to player color */
+.bombsvg .shine     { fill: #fff; opacity:.18 }
+@keyframes sparkFlicker {
+  0%,100% { transform: scale(1) rotate(-2deg); opacity: .95; }
+  50%     { transform: scale(1.12) rotate(4deg); opacity: 1; }
 }
+.bombsvg .spark { transform-origin: 52px 12px; animation: sparkFlicker .6s ease-in-out infinite; }
 
-.cell.pulse {
-  animation: pulseGlow 1s infinite alternate;
+/* Responsive */
+@media (max-width:640px){
+  :root{ --cell:54px; --gap:5px }
 }
-
-@keyframes pulseGlow {
-  from {
-    box-shadow: 0 0 8px var(--glow-color), 0 0 16px var(--glow-color);
-    border-color: rgba(255,255,255,0.4);
-  }
-  to {
-    box-shadow: 0 0 16px var(--glow-color), 0 0 32px var(--glow-color);
-    border-color: rgba(255,255,255,0.7);
-  }
-}
-
-.orb, .orb.count2, .orb.count3 {
-  border-radius: 50%;
-}
-
-.orb {
-  width: 50%;
-  height: 50%;
-}
-
-.orb.count2, .orb.count3 {
-  width: 80%;
-  height: 80%;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-}
-
-.orb.count2 i, .orb.count3 i {
-  display: block;
-  width: 40%;
-  height: 40%;
-  border-radius: 50%;
-  background: currentColor;
+@media (max-width:420px){
+  :root{ --cell:46px; --gap:4px }
 }
