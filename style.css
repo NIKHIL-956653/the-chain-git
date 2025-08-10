@@ -1,93 +1,95 @@
 :root {
   --cell-size: 60px;
+  --glow-color: #fff;
 }
 
 body {
   background: #000;
-  color: #fff;
-  font-family: sans-serif;
+  color: #cfe0ff;
+  font-family: Arial, sans-serif;
   display: flex;
   justify-content: center;
-  padding: 20px;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
 }
 
 #gameContainer {
   text-align: center;
 }
 
-h1 {
-  color: #0ff;
-  text-shadow: 0 0 20px #0ff;
-}
-
 #statusBar {
-  margin-bottom: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-bottom: 10px;
+}
+
+#statusText {
+  font-size: 1.2em;
+  margin-right: 10px;
 }
 
 #turnBadge {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  margin-right: 10px;
-}
-
-#controls {
-  margin-bottom: 10px;
 }
 
 #board {
   display: grid;
   gap: 4px;
+  justify-content: center;
+  margin-bottom: 10px;
 }
 
 .cell {
   width: var(--cell-size);
   height: var(--cell-size);
   background: #111;
-  border: 1px solid #333;
+  border: 2px solid rgba(255,255,255,0.4);
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: pointer;
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
-.cell.owned {
-  border-color: #fff2;
+.cell.pulse {
+  animation: pulseGlow 1s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  from {
+    box-shadow: 0 0 8px var(--glow-color), 0 0 16px var(--glow-color);
+    border-color: rgba(255,255,255,0.4);
+  }
+  to {
+    box-shadow: 0 0 16px var(--glow-color), 0 0 32px var(--glow-color);
+    border-color: rgba(255,255,255,0.7);
+  }
+}
+
+.orb, .orb.count2, .orb.count3 {
+  border-radius: 50%;
 }
 
 .orb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  width: 50%;
+  height: 50%;
 }
 
-.orb.count2 i,
-.orb.count3 i {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
+.orb.count2, .orb.count3 {
+  width: 80%;
+  height: 80%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.orb.count2 i, .orb.count3 i {
+  display: block;
+  width: 40%;
+  height: 40%;
   border-radius: 50%;
   background: currentColor;
-  margin: 2px;
-}
-
-/* Neon pulsing for all cells */
-.neon-pulse {
-  animation: neonPulse 1s infinite;
-}
-
-@keyframes neonPulse {
-  0% {
-    box-shadow: 0 0 5px var(--neon-color), 0 0 10px var(--neon-color), 0 0 20px var(--neon-color);
-  }
-  50% {
-    box-shadow: 0 0 15px var(--neon-color), 0 0 25px var(--neon-color), 0 0 40px var(--neon-color);
-  }
-  100% {
-    box-shadow: 0 0 5px var(--neon-color), 0 0 10px var(--neon-color), 0 0 20px var(--neon-color);
-  }
 }
