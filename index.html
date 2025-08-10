@@ -15,15 +15,15 @@
     </div>
     <div id="controls">
       <button id="newGameBtn">New Game</button>
-      <button id="undoBtn">Undo</button>
+      <button id="undoBtn" disabled>Undo</button>
     </div>
     <div id="board" role="grid"></div>
   </div>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
+    import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCqmSa4u0Pmv2ubhVrATy_0_oaKfHYd1DM",
