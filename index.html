@@ -1,23 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chain Reaction – Neon 2 Player</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Neon Chain Reaction — 2P Offline</title>
+  <!-- cache-busting ?v=7 to force latest on GitHub Pages -->
+  <link rel="stylesheet" href="style.css?v=7" />
 </head>
 <body>
-  <div id="gameContainer">
-    <h1>Chain Reaction – Neon</h1>
-    <div id="statusBar">
-      <span id="statusText"></span>
-      <div id="turnBadge"></div>
+  <main class="wrap">
+    <h1>Neon Chain Reaction</h1>
+
+    <div class="toolbar">
+      <label>Grid
+        <select id="gridSelect" aria-label="Grid size">
+          <option value="9x6">9×6</option>
+          <option value="8x6">8×6</option>
+          <option value="7x7">7×7</option>
+          <option value="6x6">6×6</option>
+          <option value="10x8">10×8</option>
+        </select>
+      </label>
+      <button id="newGameBtn" class="btn">New Game</button>
     </div>
-    <div id="board"></div>
-    <div id="controls">
-      <button id="newGameBtn">New Game</button>
+
+    <div class="status">
+      <span id="turnBadge" class="badge" aria-hidden="true"></span>
+      <span id="statusText">Loading…</span>
     </div>
-  </div>
-  <script type="module" src="game.js"></script>
+
+    <div id="board" class="board" role="grid" aria-label="Board"></div>
+  </main>
+
+  <script src="game.js?v=7"></script>
 </body>
 </html>
