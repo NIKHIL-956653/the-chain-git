@@ -82,14 +82,10 @@ input[type="color"]::-webkit-color-swatch{border:none; border-radius:8px}
     <div class="brand">Chain Reaction — Neon (Online)</div>
     <div class="controls">
       <label>Players:
-        <select id="playersSelect" aria-label="Number of players">
-          <option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option>
-        </select>
+        <select id="playersSelect"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select>
       </label>
       <label>Grid:
-        <select id="gridSelect" aria-label="Grid size">
-          <option value="9x6">9×6</option><option value="10x8">10×8</option><option value="12x8">12×8</option><option value="15x10">15×10</option>
-        </select>
+        <select id="gridSelect"><option value="9x6">9×6</option><option value="10x8">10×8</option><option value="12x8">12×8</option><option value="15x10">15×10</option></select>
       </label>
       <button id="newGameBtn" class="btn">New Game</button>
       <button id="undoBtn" class="btn" title="Undo last full move">Undo</button>
@@ -134,7 +130,7 @@ input[type="color"]::-webkit-color-swatch{border:none; border-radius:8px}
     </footer>
   </main>
 
-  <!-- Firebase compat (works on GitHub Pages) -->
+  <!-- Firebase (compat builds; fine on GitHub Pages) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -155,7 +151,6 @@ input[type="color"]::-webkit-color-swatch{border:none; border-radius:8px}
   let moveHistory=[], turnCommitted=false, eliminated=new Set(), firstMoveDone=new Array(8).fill(false);
 
   /* ONLINE State */
-  const hasFirebase = !!window.firebase;
   const clientId = (()=>{ const k="cr_client_id"; let v=localStorage.getItem(k); if(!v){ v=Math.random().toString(36).slice(2,10); localStorage.setItem(k,v);} return v; })();
   let roomId = ""; let mySeat = ""; let applyingRemote = false;
 
@@ -167,29 +162,23 @@ input[type="color"]::-webkit-color-swatch{border:none; border-radius:8px}
         createRoomBtn=$("#createRoomBtn"), joinRoomBtn=$("#joinRoomBtn"), roomInput=$("#roomCodeInput"),
         seatSelect=$("#seatSelect"), copyLinkBtn=$("#copyLinkBtn"), roomStatus=$("#roomStatus");
 
-  /* Firebase init — YOUR CONFIG (filled in) */
-  let db=null;
-  if(hasFirebase){
-    const firebaseConfig = {
-      apiKey: "AIzaSyCqmSa4u0Pmv2ubhVrATy_0_oaKfHYd1DM",
-      authDomain: "chain-reaction-nikhil.firebaseapp.com",
-      databaseURL: "https://chain-reaction-nikhil-default-rtdb.firebaseio.com",
-      projectId: "chain-reaction-nikhil",
-      storageBucket: "chain-reaction-nikhil.firebasestorage.app",
-      messagingSenderId: "962407013979",
-      appId: "1:962407013979:web:61aa487b08c4be9434697e",
-      measurementId: "G-JBNJGW0K74"
-    };
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.database();
-  }
+  /* Firebase init — uses your Singapore DB URL */
+  const firebaseConfig = {
+    apiKey: "AIzaSyCqmSa4u0Pmv2ubhVrATy_0_oaKfHYd1DM",
+    authDomain: "chain-reaction-nikhil.firebaseapp.com",
+    databaseURL: "https://chain-reaction-nikhil-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "chain-reaction-nikhil",
+    storageBucket: "chain-reaction-nikhil.firebasestorage.app",
+    messagingSenderId: "962407013979",
+    appId: "1:962407013979:web:61aa487b08c4be9434697e",
+    measurementId: "G-JBNJGW0K74"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
   /* Helpers */
-  function capacity(x,y){
-    const onTop=y===0,onBottom=y===rows-1,onLeft=x===0,onRight=x===cols-1;
-    const edges=[onTop,onBottom,onLeft,onRight].filter(Boolean).length;
-    return edges===2?2:edges===1?3:4;
-  }
+  function capacity(x,y){ const onTop=y===0,onBottom=y===rows-1,onLeft=x===0,onRight=x===cols-1;
+    const edges=[onTop,onBottom,onLeft,onRight].filter(Boolean).length; return edges===2?2:edges===1?3:4; }
   function neighbors(x,y){ const n=[]; if(x>0)n.push([x-1,y]); if(x<cols-1)n.push([x+1,y]); if(y>0)n.push([x,y-1]); if(y<rows-1)n.push([x,y+1]); return n; }
   function deepCopyBoard(b){ return b.map(row=>row.map(c=>({owner:c.owner,count:c.count}))); }
   function serializeState(){ return { rows, cols, players, current, board, playing, firstMoveDone, eliminated:[...eliminated] }; }
@@ -215,7 +204,6 @@ input[type="color"]::-webkit-color-swatch{border:none; border-radius:8px}
     gridSelect.addEventListener("change", e=>{ const [c,r]=e.target.value.split("x").map(n=>parseInt(n,10)); cols=c; rows=r; resetGame(false); if(roomId) pushState(); });
     resetBtn.addEventListener("click", ()=>{ COLORS=[...DEFAULTS]; saveColors(); setupColorPanel(); renderBoard(); updateStatus("Colors reset."); if(roomId) colorsRef(roomId).set(COLORS); });
 
-    // Online
     createRoomBtn.addEventListener("click", createRoom);
     joinRoomBtn.addEventListener("click", ()=>{ const code=(roomInput.value||"").trim().toUpperCase(); if(!code){ pulseStatus("Enter a room code."); return; } joinRoom(code); });
     copyLinkBtn.addEventListener("click", ()=>{ if(!roomId){ pulseStatus("Create or join a room first.", true); return; } const url=`${location.origin}${location.pathname}?room=${roomId}`; navigator.clipboard.writeText(url).then(()=>pulseStatus("Join link copied!")).catch(()=>pulseStatus(url)); });
@@ -267,7 +255,7 @@ input[type="color"]::-webkit-color-swatch{border:none; border-radius:8px}
     const body = document.createElementNS(svg.namespaceURI,"circle"); body.setAttribute("cx","34"); body.setAttribute("cy","38"); body.setAttribute("r","18"); body.setAttribute("fill","currentColor");
     const neck = document.createElementNS(svg.namespaceURI,"rect"); neck.setAttribute("x","25"); neck.setAttribute("y","16"); neck.setAttribute("width","18"); neck.setAttribute("height","8"); neck.setAttribute("rx","3"); neck.setAttribute("fill","currentColor");
     const fuse = document.createElementNS(svg.namespaceURI,"path"); fuse.setAttribute("d","M44 18 C54 8, 62 16, 56 22"); fuse.setAttribute("stroke","currentColor"); fuse.setAttribute("stroke-width","4"); fuse.setAttribute("fill","none"); fuse.setAttribute("stroke-linecap","round");
-    const spark = document.createElementNS(svg.namespaceURI,"circle"); spark.setAttribute("cx","56"); spark.setAttribute("cy","22"); spark.setAttribute("r","4"); spark.setAttribute("fill","currentColor");
+    const spark = document.createElementNS("http://www.w3.org/2000/svg","circle"); spark.setAttribute("cx","56"); spark.setAttribute("cy","22"); spark.setAttribute("r","4"); spark.setAttribute("fill","currentColor");
     g.append(body,neck,fuse,spark); svg.appendChild(g); return svg;
   }
   function drawCellContent(cellEl,x,y){
@@ -278,7 +266,7 @@ input[type="color"]::-webkit-color-swatch{border:none; border-radius:8px}
     const color = COLORS[owner%COLORS.length];
     if(data.count===1){ const o=el("div","orb"); o.style.background=color; cellEl.appendChild(o); }
     else if(data.count===2){ const w=el("div","orb count2"); w.style.background=color+"00"; w.appendChild(el("i")); w.appendChild(el("i")); cellEl.appendChild(w); }
-    else { const w=el("div","orb count3"); w.style.background=color+"00"; w.appendChild(el("i")); w.appendChild(el("i")); w.appendChild(el("i")); cellEl.appendChild(w); }
+    else { const w=el("div","orb count3"); w.style.background=color+"00"; w.appendChild(el("i")); el("i"); w.appendChild(el("i")); cellEl.appendChild(w); }
     const cap=capacity(x,y); if(data.count===cap-1) cellEl.appendChild(bombSVG(color));
   }
   function renderCell(x,y){ const idx=y*cols+x; drawCellContent(boardEl.children[idx],x,y); }
