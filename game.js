@@ -1,108 +1,129 @@
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set, get, onValue, update } from "firebase/database";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// Firebase config
+// --- Firebase Config ---
 const firebaseConfig = {
-    apiKey: "AIzaSyCqmSa4u0Pmv2ubhVrATy_0_oaKfHYd1DM",
-    authDomain: "chain-reaction-nikhil.firebaseapp.com",
-    databaseURL: "https://chain-reaction-nikhil-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "chain-reaction-nikhil",
-    storageBucket: "chain-reaction-nikhil.appspot.com",
-    messagingSenderId: "962407013979",
-    appId: "1:962407013979:web:61aa487b08c4be9434697e",
-    measurementId: "G-JBNJGW0K74"
+  apiKey: "AIzaSyCqmSa4u0Pmv2ubhVrATy_0_oaKfHYd1DM",
+  authDomain: "chain-reaction-nikhil.firebaseapp.com",
+  projectId: "chain-reaction-nikhil",
+  storageBucket: "chain-reaction-nikhil.appspot.com",
+  messagingSenderId: "962407013979",
+  appId: "1:962407013979:web:61aa487b08c4be9434697e",
+  measurementId: "G-JBNJGW0K74",
+  databaseURL: "https://chain-reaction-nikhil-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
 
-// Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Game variables
-let seat = null;
-let currentTurn = null;
-let roomCode = null;
-let playerColors = {};
-let boardState = [];
+// --- Game State ---
+let rows = 6, cols = 9;
+let players = 2;
+let current = 0;
+let board = [];
+let mySeat = null;
+let roomId = "testroom"; // fixed room for now
 
-// HTML elements
-const createRoomBtn = document.getElementById("createRoom");
-const joinRoomBtn = document.getElementById("joinRoom");
-const seatSelect = document.getElementById("seat");
-const newGameBtn = document.getElementById("newGame");
-const boardElement = document.getElementById("board");
+// --- DOM Elements ---
+const boardEl = document.getElementById("board");
+const statusText = document.getElementById("statusText");
+const turnBadge = document.getElementById("turnBadge");
+const newGameBtn = document.getElementById("newGameBtn");
 
-// Create room
-createRoomBtn.addEventListener("click", () => {
-    roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
-    set(ref(db, `rooms/${roomCode}`), {
-        board: [],
-        currentTurn: "P1",
-        players: {},
-    });
-    alert(`Room created: ${roomCode}`);
-});
-
-// Join room
-joinRoomBtn.addEventListener("click", () => {
-    seat = seatSelect.value;
-    if (!roomCode) {
-        roomCode = prompt("Enter room code:");
+function setupBoard() {
+  board = Array.from({length: rows}, () => Array.from({length: cols}, () => ({owner:-1, count:0})));
+  boardEl.style.gridTemplateColumns = `repeat(${cols}, var(--cell-size))`;
+  boardEl.innerHTML = "";
+  for (let y=0; y<rows; y++){
+    for (let x=0; x<cols; x++){
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.x = x;
+      cell.dataset.y = y;
+      cell.addEventListener("click", () => handleMove(x,y));
+      boardEl.appendChild(cell);
     }
-    update(ref(db, `rooms/${roomCode}/players`), {
-        [seat]: { color: seat === "P1" ? "red" : "blue" }
-    });
-    listenToRoom();
-});
-
-// Listen for updates
-function listenToRoom() {
-    onValue(ref(db, `rooms/${roomCode}`), (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            boardState = data.board || [];
-            currentTurn = data.currentTurn;
-            renderBoard();
-        }
-    });
+  }
 }
 
-// Handle cell click
-function handleCellClick(row, col) {
-    if (seat !== currentTurn) {
-        alert("Not your turn!");
-        return;
-    }
-    if (!boardState[row]) boardState[row] = [];
-    if (!boardState[row][col]) {
-        boardState[row][col] = seat;
-    } else if (boardState[row][col] === seat) {
-        // Add more orbs logic if needed
-    } else {
-        alert("Can't place on opponent's cell!");
-        return;
-    }
-
-    // Save new state and switch turn
-    const nextTurn = seat === "P1" ? "P2" : "P1";
-    update(ref(db, `rooms/${roomCode}`), {
-        board: boardState,
-        currentTurn: nextTurn
-    });
-}
-
-// Render board
 function renderBoard() {
-    boardElement.innerHTML = "";
-    for (let r = 0; r < 6; r++) {
-        const rowDiv = document.createElement("div");
-        rowDiv.classList.add("row");
-        for (let c = 0; c < 9; c++) {
-            const cell = document.createElement("div");
-            cell.classList.add("cell");
-            cell.textContent = boardState[r]?.[c] || "";
-            cell.addEventListener("click", () => handleCellClick(r, c));
-            rowDiv.appendChild(cell);
-        }
-        boardElement.appendChild(rowDiv);
+  const cells = boardEl.children;
+  let idx=0;
+  for (let y=0; y<rows; y++){
+    for (let x=0; x<cols; x++){
+      const cell = cells[idx++];
+      const data = board[y][x];
+      cell.innerHTML = "";
+      cell.classList.toggle("owned", data.owner !== -1);
+      if (data.count > 0) {
+        const orb = document.createElement("div");
+        orb.className = "orb";
+        orb.style.background = COLORS[data.owner];
+        cell.appendChild(orb);
+      }
     }
+  }
 }
+
+function updateStatus() {
+  const color = COLORS[current];
+  document.documentElement.style.setProperty("--board-glow-color", color);
+  turnBadge.style.background = color;
+  statusText.textContent = `Player ${current+1}'s turn`;
+}
+
+function handleMove(x,y){
+  if (mySeat !== current) return; // not your turn
+  const cell = board[y][x];
+  if (cell.owner !== -1 && cell.owner !== current) return;
+  cell.owner = current;
+  cell.count += 1;
+  current = (current + 1) % players;
+  pushGameState();
+}
+
+function pushGameState(){
+  update(ref(db, `rooms/${roomId}`), {
+    board,
+    current
+  });
+}
+
+function joinRoom(){
+  const roomRef = ref(db, `rooms/${roomId}`);
+  get(roomRef).then(snapshot => {
+    if (!snapshot.exists()){
+      set(roomRef, {
+        board,
+        current: 0,
+        seats: [null, null]
+      });
+    } else {
+      let data = snapshot.val();
+      if (data.seats[0] === null) { mySeat = 0; data.seats[0] = true; }
+      else if (data.seats[1] === null) { mySeat = 1; data.seats[1] = true; }
+      update(roomRef, { seats: data.seats });
+    }
+  });
+
+  onValue(roomRef, snap => {
+    const data = snap.val();
+    if (!data) return;
+    board = data.board;
+    current = data.current;
+    renderBoard();
+    updateStatus();
+  });
+}
+
+// --- Constants ---
+const COLORS = ["#ff4757", "#1e90ff"];
+
+// --- Init ---
+setupBoard();
+joinRoom();
+newGameBtn.addEventListener("click", () => {
+  setupBoard();
+  current = 0;
+  pushGameState();
+});
