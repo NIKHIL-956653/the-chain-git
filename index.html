@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Neon Chain Reaction — 2P Offline</title>
-  <!-- cache-busting ?v=7 to force latest on GitHub Pages -->
-  <link rel="stylesheet" href="style.css?v=7" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Neon Chain Reaction with AI</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="wrap">
@@ -13,25 +12,62 @@
 
     <div class="toolbar">
       <label>Grid
-        <select id="gridSelect" aria-label="Grid size">
-          <option value="9x6">9×6</option>
-          <option value="8x6">8×6</option>
-          <option value="7x7">7×7</option>
+        <select id="gridSelect">
           <option value="6x6">6×6</option>
-          <option value="10x8">10×8</option>
+          <option value="7x7">7×7</option>
+          <option value="8x8">8×8</option>
+          <option value="9x9" selected>9×9</option>
+          <option value="10x10">10×10</option>
         </select>
       </label>
+
+      <label>Players
+        <select id="playerCountSelect">
+          <option value="2" selected>2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+      </label>
+
+      <label id="modeLabel">Mode:</label>
+      <select id="gameModeSelect" style="margin-left: 10px;">
+        <option value="normal" selected>Normal</option>
+        <option value="timeAttack">Time Attack</option>
+      </select>
+
+      <label id="timerLabel" style="margin-left: 10px; display:none;">Timer:</label>
+      <select id="timerSelect" style="margin-left: 5px; display:none;">
+        <option value="120" selected>2 minutes</option>
+        <option value="180">3 minutes</option>
+        <option value="300">5 minutes</option>
+      </select>
+
+      <div id="timerDisplay" style="margin-left: 20px; font-weight: 600; color: #47f2ff; display: none;">
+        Time Left: <span id="timeLeft">120</span>s
+      </div>
+
       <button id="newGameBtn" class="btn">New Game</button>
+      <button id="undoBtn" class="btn">Undo</button>
     </div>
 
+    <div id="playerSettingsContainer" class="player-settings-container"></div>
+
     <div class="status">
-      <span id="turnBadge" class="badge" aria-hidden="true"></span>
+      <span id="turnBadge" class="badge"></span>
       <span id="statusText">Loading…</span>
     </div>
 
-    <div id="board" class="board" role="grid" aria-label="Board"></div>
+    <div id="scoreBoard" style="margin-top: 14px; color: #47f2ff; font-weight: 600;">
+      Scores: <span id="scoreDisplay"></span>
+    </div>
+
+    <div id="board" class="board"></div>
+
+    <p><small>Tap cells to play. Up to 6 human or AI players, local turns.</small></p>
   </main>
 
-  <script src="game.js?v=7"></script>
+  <script src="game.js"></script>
 </body>
 </html>
